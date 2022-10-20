@@ -8,6 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(stats)
 ```
 
 ### Question 1 Setup:
@@ -49,8 +50,65 @@ demvotes <- votes %>%
 
 votemerge <- merge(newvotes, demvotes, by = c("election", "state")) %>%
   select(-party) %>%
-  mutate(pcDem = vote/turnout) %>%
+  mutate(pcDem = vote/turnout*100) %>%
   select(-vote)
+
+votemerge <- votemerge[,c(1, 2, 4, 3)]
 ```
 
+### 1c) Plot democratic vote share over time for Pennsylvania, South Carolina, and West Virginia using a \texttt{ggplot()} line graph with clear and appropriately labeled legends and axes.
 
+```{r 1c}
+# West Virginia is misspelled...edit out with recode() below
+
+cdata <- votemerge %>%
+  filter(state %in% c("Pennsylvania", "South Carolina", "West Vriginia")) 
+
+cdata$state <- recode(cdata$state, `West Vriginia` = "West Virginia")
+
+cdata$election <- as.numeric(cdata$election)
+
+ggplot(cdata, aes(x = election, y = pcDem)) +
+  geom_point() +
+  geom_line() +
+  aes(color = state) +
+  labs(x = "Election", 
+       y = "Percent Democratic", 
+       color = "State", 
+       title = "Democratic Vote Pct., 1932-2008",
+       subtitle = "Data from Pennsylvania, South Carolina, West Virginia")
+```
+
+### 1d) Use \texttt{ggplot()} to make a scatterplot showing the relationship between 2004 and 2008 democratic vote share.
+
+```{r 1d}
+ddata <- votemerge %>%
+  filter(election %in% c(2004, 2008))
+
+ggplot(ddata, aes(x = election, y = pcDem)) +
+  geom_point(aes(color = election)) + 
+  geom_jitter(aes(color = election)) +
+  labs(x = "Election",
+       y = "Percent Democratic",
+       color = "Election",
+       title = "Comparative Democratic Vote Share, 2004 and 2008")
+```
+
+### 1e) Use a paired t-test to test whether the difference between the 2004 and 2008 democratic vote share was significantly different across states. Interpret your results.
+
+```{r 1e}
+
+# First, I split my data into two -- 2004 and 2008 and select pcDem.
+
+e2004 <- ddata %>%
+  filter(election == 2004) %>%
+  select(pcDem)
+
+e2008 <- ddata %>%
+  filter(election == 2008) %>%
+  select(pcDem)
+
+t.test(e2004[,1], e2008[,1], paired = TRUE, alternative = "two.sided")
+```
+
+The p-value of the test is $8.493^{-14}$, which is lower than the significance level $\alpha = 0.05$. Thus, we can reject the null hypothesis and say that the average Democratic vote share in 2008 is significantly different than the average Democratic vote share in 2004, with a p-value at $8.493^{-14}$.
