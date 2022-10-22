@@ -9,9 +9,11 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(stats)
+library(infer)
+library(pwr)
 ```
 
-### Question 1 Setup:
+### Question 1 Background:
 
 *Download the \textit{votes.csv} dataset from the course website.  These data describe the number of votes obtained by the Democratic and Republican candidates in each presidential election from 1932 to 2008.*
 
@@ -84,14 +86,20 @@ ggplot(cdata, aes(x = election, y = pcDem)) +
 ```{r 1d}
 ddata <- votemerge %>%
   filter(election %in% c(2004, 2008))
+```
 
-ggplot(ddata, aes(x = election, y = pcDem)) +
-  geom_point(aes(color = election)) + 
-  geom_jitter(aes(color = election)) +
-  labs(x = "Election",
-       y = "Percent Democratic",
-       color = "Election",
-       title = "Comparative Democratic Vote Share, 2004 and 2008")
+```{r inset}
+graphdata <- ddata %>% 
+  select(-turnout) %>%
+  pivot_wider(names_from = election, values_from = pcDem)
+```
+
+```{r dplot}
+ggplot(graphdata, aes(x = `2004`, y = `2008`)) +
+  geom_point() +
+  labs(x = "2004 Vote Share (Pct)",
+       y = "2008 Vote Share (Pct)",
+       title = "Relationship between 2004 and 2008 Democratic Vote Shares")
 ```
 
 ### 1e) Use a paired t-test to test whether the difference between the 2004 and 2008 democratic vote share was significantly different across states. Interpret your results.
@@ -112,3 +120,73 @@ t.test(e2004[,1], e2008[,1], paired = TRUE, alternative = "two.sided")
 ```
 
 The p-value of the test is $8.493^{-14}$, which is lower than the significance level $\alpha = 0.05$. Thus, we can reject the null hypothesis and say that the average Democratic vote share in 2008 is significantly different than the average Democratic vote share in 2004, with a p-value at $8.493^{-14}$.
+
+### Question 2 Background:
+
+*Download the \textit{olken.csv} dataset from the course website, which comes from an experiment described in Benjamin A. Olken. 2007.  ``Monitoring Corruption: Evidence from a Field Experiment in Indonesia.'' \textit{ Journal of Political Economy}.  115(2): 200-249.*
+
+*Missing data from the dataset were omitted.  The experiment sought to test the effect of efforts to encourage communities to monitor road building projects in Indonesian villages on reducing corruption.  The main treatment variable is whether or not residents in a particular village were invited to participate at accountability meetings in which project officials account for how they spent project funds.  The main dependent variable is a measure of the difference between what the villages claimed they spent on road construction and an independent estimate of what the villages actually spent.  The variables in the dataset are:*
+
+\begin{itemize}
+\item \textit{pct\_missing}: Percent expenditures missing
+\item \textit{treat\_invite}: Treatment assignment
+\item \textit{mosques}: Mosques per 1,000
+\end{itemize}
+
+```{r 2setup}
+olken <- read.csv("olken.csv")
+```
+
+
+### 2a) Estimate the population average $\mu$ of the \textit{pct\_missing} variable with the sample mean. Report the standard error and a 95\% confidence interval for your estimate as well.
+
+```{r}
+missing_mean <- mean(olken$pct_missing)
+std_err <- sd(olken$pct_missing) / sqrt(length(olken$pct_missing))
+confidence = quantile(olken$pct_missing, c(.025, .975))
+
+missing_mean
+std_err
+confidence
+```
+
+### 2b) Conduct a two-sided t-test with the null hypothesis that $\mu_0 = 0$ with $\alpha = 0.05$.  Report your test statistic and p-value.  What is the interpretation of this p-value?  Can you reject the null hypothesis? 
+
+```{r 2b}
+t.test(olken$pct_missing)
+```
+
+Here, the test statistic is 14.904, and the p-value is $2.2*10^{-16}$. The p-value is way lower than 0.05, so the null hypothesis can be rejected at the 5% level of significance.
+
+### 2c) Repeat b) with the null hypothesis $\mu_0 = 0.25$. Hint: check the documentation for \texttt{t.test} using \texttt{?t.test} to figure out how to do this.
+
+```{r 2c}
+t.test(olken$pct_missing, mu = 0.25)
+```
+
+Here, the test statistic is -0.86222, and the p-value is 0.389. This time, the p-value is way higher than 0.05, meaning that we cannot reject this null hypothesis at the 5% level of significance.
+
+### 2d) Calculate the $t$-statistic of the null hypothesis in parts b) and c) analytically. Confirm you get the same results. Explain what the test statistic means. 
+
+To get our test statistic, we can use the following formula: $\frac{\mu_a - \mu_0}{\hat{SE}(\mu_a)}$. In the first case, $\mu_0 = 0$, so we can simply say $\frac{\mu_a}{\hat{SE}(\mu_a)}$, or our missing_mean value over the std_err value from our previous question. 
+
+```{r 2db}
+tvalue <- missing_mean/std_err
+tvalue
+```
+
+This is the same result as the t-value we got in 2b). 
+
+For 2c), we can get our test statistic using the same formula, but instead, it turns into $\frac{\mu_a - .25}{\hat{SE}(\mu_a)}$. Here it is:
+
+```{r 2dc}
+tvaluec <- (missing_mean-.25)/std_err
+tvaluec
+```
+
+Again, this confirms the value that we got in 2c).
+
+The test statistic is any function of the data that dictates whether the null should be rejected or not. In this case, we are using the t-value, given that we're doing t-tests.
+
+### 2e) Let $Y_t$ denote \textit{pct\_missing} for villages that received the treatment and $Y_c$ denote \textit{pct\_missing} for villages that did not receive treatment.  Assume that $Y_t$ and $Y_c$ are independent and have unequal variances. Conduct a two-sided t-test for the equality of means of $Y_t$ and $Y_c$ where the null hypothesis is $H_0: \mu_{Y_t} = \mu_{Y_c}$.  Report your test statistic and p-value, as well as a 95\% confidence interval. Can you reject the null hypothesis at the $\alpha = 0.05$ level?  Give a brief substantive explanation of your result (i.e.\ what can you say about the effect of the treatment on corruption?).
+
