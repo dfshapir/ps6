@@ -190,3 +190,29 @@ The test statistic is any function of the data that dictates whether the null sh
 
 ### 2e) Let $Y_t$ denote \textit{pct\_missing} for villages that received the treatment and $Y_c$ denote \textit{pct\_missing} for villages that did not receive treatment.  Assume that $Y_t$ and $Y_c$ are independent and have unequal variances. Conduct a two-sided t-test for the equality of means of $Y_t$ and $Y_c$ where the null hypothesis is $H_0: \mu_{Y_t} = \mu_{Y_c}$.  Report your test statistic and p-value, as well as a 95\% confidence interval. Can you reject the null hypothesis at the $\alpha = 0.05$ level?  Give a brief substantive explanation of your result (i.e.\ what can you say about the effect of the treatment on corruption?).
 
+```{r 2e}
+# First, I need to split these into two vectors: one that was treated and one
+# that was not.
+
+treated <- olken %>%
+  filter(treat_invite == 1)
+
+untreated <- olken %>%
+  filter(treat_invite == 0)
+
+# Now, I can insert these two vectors into a t-test.
+
+t.test(treated$pct_missing, untreated$pct_missing)
+```
+
+Here, we used Welch's Two Sample t-test, which can also basically be described as an unequal variances t-test. The test statistic is the t-value, at -0.75376, and the p-value is 0.4515. The lower bound of the 95% confidence interval is -0.09, and the upper bound is 0.04. The p-value is quite high -- 0.4515, so we cannot reject the null hypothesis at the 5% level of significance.
+
+Putting this into more applied language, basically, the null hypothesis is that we should observe *no* difference in the amount of money "missing" between villages that have been treated (i.e. where villagers have been invited to participate in accountability meetings) and villages that were untreated (where villagers were not invited to said meetings). If we cannot reject the null hypothesis at the 5% level of significance, it means that we cannot argue (at this level of significance) that inviting villagers to participate in accountability meetings had a significant impact on corrupt activity. This does not mean we can *confirm* the null hypothesis; simply that we cannot reject it.
+
+### 2f) Suppose you were actually running this experiment and your research assistant comes to you and says "I think we can get better results if we ran a one-sided test instead."  Do you think this is a good idea?  Why or why not?  What assumptions would you be making?
+
+I would say that it's most likely not a good idea. As Jane said in class, using a one-sided test "comes off as shady." There are a number of assumptions that you're making, most notably that the consequences of not recording an effect in the direction that is getting skipped are negligible. In this case, this could potentially look like the research assistant saying that he/she is only interested in seeing whether the treated villages experienced less corruption than the untreated villages, and that he/she does not care at all about any potential data in which the untreated villages experienced less corruption than the treated villages. 
+
+This does not look like a great idea. The research question does not say that this is what the researchers are looking for; rather, it just says that the experiment tests "the effect of efforts." This "effect," as listed in the research question, is value-neutral. If I would even consider running a one-sided test instead of a normal two-sided one, I'd want to have a well-written explanation as to why exactly we only care about effects in one direction, and not the other. Given that I don't see a particularly good rationale why this would be the case in this instance, I don't think I'd be likely to accept my research assistant's proposition.
+
+### 2g) Repeat e) using a one-sided test where the alternative hypothesis is $H_1: \mu_{Y_t} < \mu_{Y_c}$.
