@@ -216,3 +216,19 @@ I would say that it's most likely not a good idea. As Jane said in class, using 
 This does not look like a great idea. The research question does not say that this is what the researchers are looking for; rather, it just says that the experiment tests "the effect of efforts." This "effect," as listed in the research question, is value-neutral. If I would even consider running a one-sided test instead of a normal two-sided one, I'd want to have a well-written explanation as to why exactly we only care about effects in one direction, and not the other. Given that I don't see a particularly good rationale why this would be the case in this instance, I don't think I'd be likely to accept my research assistant's proposition.
 
 ### 2g) Repeat e) using a one-sided test where the alternative hypothesis is $H_1: \mu_{Y_t} < \mu_{Y_c}$.
+
+```{r 2g}
+t.test(treated$pct_missing, untreated$pct_missing, alternative = "less")
+```
+
+Here, we see the test statistic (t-value here) at -0.75376 and the p-value at 0.2258. Given that we're essentially cutting the effect that we cared about in 2e) in half, it makes sense that we get a p-value that's about half of the p-value in 2e). Additionally, since we're only doing a one-sided test, the left bound of the confidence interval is $-\infty$ and the right bound is approximately 0.027. Again, we cannot reject the null hypothesis at the $\alpha = 0.05$ level; the p-value is too high. 
+
+### 2h) Now let $Y_t$ and $Y_c$ denote the variable \textit{mosques} for treatment and control observations respectively.  Again assume independence and unequal variances.  Run a two-sided t-test for the equality of means with $H_0: \mu_{Y_t} = \mu_{Y_c}$.  Report your test statistic and p-value.  Can you reject the null hypothesis at the $\alpha=0.05$ level?  Does your result make sense intuitively in an experimental setting where the treatment variable was randomly assigned?  Why or why not?
+
+```{r 2h}
+t.test(treated$mosques, untreated$mosques)
+```
+
+In this t-test, the test statistic (t-value) is -0.66241, and the p-value is 0.5082. The p-value is quite high, so we cannot reject the null hypothesis at the 5% level of significance.
+
+Intuitively, yes, this makes sense, and it is probably good that we do not see some very convincing data here one way or the other. Given that the treatment has nothing to do with a village's "mosques per 1,000" number, it would raise a red flag, in my opinion, if the treated population had significantly more or fewer mosques per capita than the untreated population. If this were the case, then it would be worth a look deeper into the experiment to determine how truly "random" the assignment of the treatment was. 
