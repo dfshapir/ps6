@@ -143,7 +143,7 @@ olken <- read.csv("olken.csv")
 ```{r}
 missing_mean <- mean(olken$pct_missing)
 std_err <- sd(olken$pct_missing) / sqrt(length(olken$pct_missing))
-confidence = quantile(olken$pct_missing, c(.025, .975))
+confidence <- t.test(olken$pct_missing)$conf.int
 
 missing_mean
 std_err
